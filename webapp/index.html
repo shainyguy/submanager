@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    
+    <title>SubsManager</title>
+    
+    <!-- Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loader -->
+    <div id="loader" class="loader">
+        <div class="loader-spinner"></div>
+        <p>Загрузка...</p>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="avatar" id="userAvatar">
+                        <span id="userInitial">U</span>
+                    </div>
+                    <div class="header-info">
+                        <h1 class="header-title">Привет, <span id="userName">друг</span>!</h1>
+                        <p class="header-subtitle" id="headerSubtitle">Управляй подписками</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="monthlyTotal">0₽</span>
+                        <span class="stat-label">в месяц</span>
+                    </div>
+                    <div class="stat-glow"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="yearlyTotal">0₽</span>
+                        <span class="stat-label">в год</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="subsCount">0</span>
+                        <span class="stat-label">подписок</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-accent" id="savingsCard">
+                    <div class="stat-icon">✨</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="potentialSavings">0₽</span>
+                        <span class="stat-label">можно сэкономить</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="subscriptions">
+                <span class="tab-icon">📋</span>
+                <span class="tab-text">Подписки</span>
+            </button>
+            <button class="tab" data-tab="analytics">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Аналитика</span>
+            </button>
+            <button class="tab" data-tab="tips">
+                <span class="tab-icon">💡</span>
+                <span class="tab-text">Советы</span>
+            </button>
+        </nav>
+
+        <!-- Content Sections -->
+        <main class="content">
+            
+            <!-- Subscriptions Tab -->
+            <section id="subscriptions-tab" class="tab-content active">
+                <div class="section-header">
+                    <h2>Мои подписки</h2>
+                    <button class="btn btn-primary btn-sm" id="addSubBtn">
+                        <span>+</span> Добавить
+                    </button>
+                </div>
+                
+                <div class="subscriptions-list" id="subscriptionsList">
+                    <!-- Подписки загрузятся через JS -->
+                </div>
+                
+                <div class="empty-state hidden" id="emptyState">
+                    <div class="empty-icon">📭</div>
+                    <h3>Нет подписок</h3>
+                    <p>Добавь свою первую подписку, чтобы начать отслеживать расходы</p>
+                    <button class="btn btn-primary" id="addFirstSubBtn">
+                        Добавить подписку
+                    </button>
+                </div>
+            </section>
+
+            <!-- Analytics Tab -->
+            <section id="analytics-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Аналитика</h2>
+                </div>
+                
+                <!-- Chart -->
+                <div class="chart-card">
+                    <h3>Расходы по категориям</h3>
+                    <div class="chart-container">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Categories Breakdown -->
+                <div class="categories-list" id="categoriesList">
+                    <!-- Категории загрузятся через JS -->
+                </div>
+                
+                <!-- Spending Forecast -->
+                <div class="forecast-card">
+                    <h3>📈 Прогноз расходов</h3>
+                    <div class="forecast-grid">
+                        <div class="forecast-item">
+                            <span class="forecast-period">Квартал</span>
+                            <span class="forecast-value" id="quarterlyForecast">0₽</span>
+                        </div>
+                        <div class="forecast-item">
+                            <span class="forecast-period">Год</span>
+                            <span class="forecast-value" id="yearlyForecast">0₽</span>
+                        </div>
+                        <div class="forecast-item">
+                            <span class="forecast-period">5 лет</span>
+                            <span class="forecast-value" id="fiveYearForecast">0₽</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tips Tab -->
+            <section id="tips-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Умные советы</h2>
+                </div>
+                
+                <div class="tips-list" id="tipsList">
+                    <!-- Советы загрузятся через JS -->
+                </div>
+                
+                <!-- Duplicates Alert -->
+                <div class="duplicates-card hidden" id="duplicatesCard">
+                    <div class="duplicates-header">
+                        <span class="duplicates-icon">🔄</span>
+                        <div>
+                            <h3>Найдены дубликаты!</h3>
+                            <p id="duplicatesCount">0 пересечений</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" id="viewDuplicatesBtn">
+                        Посмотреть
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- FAB Button -->
+        <button class="fab" id="fabBtn" aria-label="Добавить подписку">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Add Subscription Modal -->
+    <div class="modal hidden" id="addSubModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Новая подписка</h2>
+                <button class="modal-close" id="closeModalBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Quick Add -->
+                <div class="quick-add">
+                    <h3>Популярные сервисы</h3>
+                    <div class="quick-services" id="quickServices">
+                        <button class="quick-service" data-service="yandex_plus">
+                            <span class="service-icon">🟡</span>
+                            <span class="service-name">Яндекс Плюс</span>
+                            <span class="service-price">299₽</span>
+                        </button>
+                        <button class="quick-service" data-service="vk_combo">
+                            <span class="service-icon">🔵</span>
+                            <span class="service-name">VK Combo</span>
+                            <span class="service-price">199₽</span>
+                        </button>
+                        <button class="quick-service" data-service="kinopoisk">
+                            <span class="service-icon">🎬</span>
+                            <span class="service-name">Кинопоиск</span>
+                            <span class="service-price">269₽</span>
+                        </button>
+                        <button class="quick-service" data-service="telegram_premium">
+                            <span class="service-icon">⭐</span>
+                            <span class="service-name">Telegram</span>
+                            <span class="service-price">299₽</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="divider">
+                    <span>или добавь свою</span>
+                </div>
+                
+                <!-- Custom Form -->
+                <form id="addSubForm" class="add-form">
+                    <div class="form-group">
+                        <label for="subName">Название</label>
+                        <input type="text" id="subName" placeholder="Netflix, Spotify..." required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subPrice">Цена</label>
+                            <div class="input-with-suffix">
+                                <input type="number" id="subPrice" placeholder="299" required min="0" step="1">
+                                <span class="input-suffix">₽</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subCycle">Период</label>
+                            <select id="subCycle">
+                                <option value="monthly">Месяц</option>
+                                <option value="yearly">Год</option>
+                                <option value="weekly">Неделя</option>
+                                <option value="quarterly">Квартал</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subCategory">Категория</label>
+                        <select id="subCategory">
+                            <option value="streaming">🎬 Видео и ТВ</option>
+                            <option value="music">🎵 Музыка</option>
+                            <option value="gaming">🎮 Игры</option>
+                            <option value="books">📚 Книги</option>
+                            <option value="productivity">💼 Продуктивность</option>
+                            <option value="cloud">☁️ Облако</option>
+                            <option value="education">🎓 Образование</option>
+                            <option value="other">📦 Другое</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="subIsTrial">
+                            <span class="checkbox-custom"></span>
+                            <span>Это пробный период</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group hidden" id="trialEndGroup">
+                        <label for="subTrialEnd">Дата окончания триала</label>
+                        <input type="date" id="subTrialEnd">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Добавить подписку
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Detail Modal -->
+    <div class="modal hidden" id="subDetailModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detailTitle">Подписка</h2>
+                <button class="modal-close" id="closeDetailBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="detailBody">
+                <!-- Детали загрузятся через JS -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline btn-danger" id="deleteSubBtn">
+                    Удалить
+                </button>
+                <button class="btn btn-primary" id="editSubBtn">
+                    Редактировать
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>

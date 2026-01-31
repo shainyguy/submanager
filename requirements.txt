@@ -1,0 +1,29 @@
+# Bot
+aiogram==3.4.1
+python-dotenv==1.0.0
+
+# Database
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+aiosqlite==0.19.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# HTTP
+aiohttp==3.9.1
+
+# Payments
+yookassa==3.0.1
+
+# API Server
+fastapi==0.109.0
+uvicorn==0.27.0
+pydantic==2.5.3
+
+# Utils
+python-dateutil==2.8.2
+pytz==2024.1
+
+# For Railway
+gunicorn==21.2.0
