@@ -6,6 +6,8 @@ from aiohttp import web
 import logging
 from datetime import datetime, date, timedelta
 from typing import Optional
+import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,9 @@ def set_database(database_module):
     global db
     db = database_module
     logger.info("✅ Database module connected to API")
+
+# Путь к статическим файлам
+STATIC_DIR = Path(__file__).parent / 'static'
 
 
 # ========================================
@@ -767,6 +772,22 @@ async def handle_health(request):
 # WEB APP SETUP
 # ========================================
 
+async def handle_index(request):
+    """GET / - Главная страница Mini App"""
+    index_path = STATIC_DIR / 'index.html'
+    if index_path.exists():
+        return web.FileResponse(index_path)
+    return web.Response(text="Mini App not found", status=404)
+
+
+async def handle_static(request):
+    """Отдача статических файлов"""
+    filename = request.match_info.get('filename', 'index.html')
+    filepath = STATIC_DIR / filename
+    if filepath.exists() and filepath.is_file():
+        return web.FileResponse(filepath)
+    return web.Response(text="Not found", status=404)
+
 def create_app():
     """Создаёт и настраивает веб-приложение"""
     app = web.Application()
@@ -789,7 +810,12 @@ def create_app():
     
     app.middlewares.append(cors_middleware)
     
-    # Роуты
+    # === Статические файлы и Mini App ===
+    app.router.add_get('/', handle_index)
+    app.router.add_get('/index.html', handle_index)
+    app.router.add_get('/static/{filename}', handle_static)
+    
+    # === API роуты ===
     app.router.add_route('OPTIONS', '/{path:.*}', lambda r: web.Response())
     app.router.add_get('/health', handle_health)
     app.router.add_post('/api/sync', handle_sync)
