@@ -440,34 +440,65 @@ async def handle_add_subscription(request):
         }, status=500)
 
 
-async def handle_update_subscription(request):
+async def handle_add_subscription(request):
     """
-    PUT /api/subscriptions/{id}
-    Обновить подписку
+    POST /api/subscriptions
+    Добавить новую подписку
     """
     try:
-        sub_id = int(request.match_info['id'])
         data = await request.json()
+        telegram_id = int(data.get('telegramId'))
         sub_data = data.get('subscription', {})
         
-        # Получаем текущую подписку
-        sub = await db.get_subscription(sub_id)
-        if not sub:
-            return web.json_response({
-                'success': False,
-                'error': 'Subscription not found'
-            }, status=404)
+        # Парсим дату
+        next_payment = sub_data.get('nextPayment')
+        if next_payment:
+            if isinstance(next_payment, str):
+                try:
+                    start_date = datetime.fromisoformat(next_payment.replace('Z', '+00:00')).date()
+                except:
+                    try:
+                        start_date = datetime.strptime(next_payment[:10], '%Y-%m-%d').date()
+                    except:
+                        start_date = date.today() + timedelta(days=30)
+            else:
+                start_date = date.today() + timedelta(days=30)
+        else:
+            start_date = date.today() + timedelta(days=30)
         
-        # Обновляем поля
-        # Нужно добавить функцию update_subscription в database.py
-        # Пока возвращаем заглушку
+        # Определяем billing_cycle
+        billing_cycle_str = sub_data.get('billingCycle', 'monthly').lower()
+        
+        from .models import BillingCycle
+        
+        billing_cycle_map = {
+            'weekly': BillingCycle.WEEKLY,
+            'monthly': BillingCycle.MONTHLY,
+            'quarterly': BillingCycle.QUARTERLY,
+            'yearly': BillingCycle.YEARLY,
+            'lifetime': BillingCycle.LIFETIME,
+        }
+        billing_cycle = billing_cycle_map.get(billing_cycle_str, BillingCycle.MONTHLY)
+        
+        # Добавляем подписку со всеми полями
+        new_sub = await db.add_subscription(
+            telegram_id=telegram_id,
+            name=sub_data.get('name'),
+            price=float(sub_data.get('price', 0)),
+            billing_cycle=billing_cycle,
+            start_date=start_date,
+            icon=sub_data.get('icon'),
+            category=sub_data.get('category'),
+            color=sub_data.get('color'),
+            currency=sub_data.get('currency', 'RUB'),
+        )
         
         return web.json_response({
             'success': True,
-            'message': 'Updated (функция update требует реализации в database.py)'
+            'subscription': subscription_to_dict(new_sub)
         })
     except Exception as e:
-        logger.error(f"Update subscription error: {e}")
+        logger.error(f"Add subscription error: {e}", exc_info=True)
         return web.json_response({
             'success': False,
             'error': str(e)
